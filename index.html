@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专题纪实 | GIG ECONOMY</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap">
+    <style>
+        :root {
+            --bg-color: #fcfaf2; 
+            --text-main: #2b2b2b; 
+            --accent-red: #8c261a; 
+            --text-muted: #6e6e6e;
+            --font-serif: 'Noto Serif SC', "Songti SC", serif;
+            --font-sans: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth; 
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            font-family: var(--font-sans);
+            position: relative;
+        }
+
+        /* 引入：浑厚苍劲的书法字体（阿里妈妈东方大楷） */
+        @font-face {
+            font-family: 'AlimamaDongFangDaKai';
+            src: url('https://g.corestudiocloud.com/alimm-fonts/AlimamaDongFangDaKai/AlimamaDongFangDaKai.woff2') format('woff2');
+            font-display: swap;
+        }
+
+        /* --- 背景人物透明图片预留区（包含视差滚动层与底线） --- */
+        .bg-silhouette-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bg-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.08;
+            stroke: var(--accent-red);
+        }
+
+        /* 💡 已调高透明度（从 0.035 提升至 0.18），让剪影显示得更清楚 */
+        .silhouette-img {
+            position: absolute;
+            opacity: 0.08; 
+            transition: transform 0.15s cubic-bezier(0.1, 0.8, 0.2, 1);
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(140, 38, 26, 0.05)); /* 增加微弱投影强化轮廓 */
+        }
+        
+        .sil-rider { top: 15%; right: 2%; width: 340px; height: 420px; transform: scaleX(-1); }
+        .sil-creator { top: 48%; left: 1%; width: 360px; height: 440px; }
+        .sil-worker { bottom: 2%; right: 3%; width: 310px; height: 380px; }
+
+        /* ==================== 顶部高级感导航栏 ==================== */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 35px 6%;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(223, 216, 207, 0.8), rgba(223, 216, 207, 0));
+            backdrop-filter: blur(2px);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-title {
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #3a322c;
+        }
+
+        .logo-sub {
+            font-size: 0.7rem;
+            color: #6e6258;
+            border-left: 1px solid #6e6258;
+            padding-left: 12px;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            font-family: var(--font-serif);
+            color: #3a322c;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            position: relative;
+            padding-bottom: 6px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-red); 
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 15%;
+            width: 70%;
+            height: 1.5px;
+            background-color: var(--accent-red);
+        }
+
+        /* ==================== 首屏文字浮现排版与动画 ==================== */
+        .hero-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            padding: 0 10%;
+        }
+
+        .typography-wrapper {
+            margin-top: -30px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeInCanvas 1.5s ease-out forwards;
+        }
+
+        .txt-top {
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: #211c18;
+            margin-bottom: 5px;
+        }
+
+        .txt-middle {
+            font-family: var(--font-serif);
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 12px;
+            color: #110f0d;
+            border-bottom: 2px solid #211c18; 
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            padding-left: 12px; 
+        }
+
+        .txt-huge-digital {
+            font-family: 'AlimamaDongFangDaKai', var(--font-serif), serif; 
+            font-size: 6rem; 
+            font-weight: bold;
+            line-height: 0.95;
+            color: var(--accent-red);
+            margin: 15px 0 5px 0;
+            letter-spacing: -2px;
+            text-shadow: 1px 1px 3px rgba(140, 45, 25, 0.2), 
+                         0 0 20px rgba(223, 216, 207, 0.5); 
+            animation: scaleIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .txt-bottom {
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: 6px;
+            color: #211c18;
+            margin-bottom: 12px;
+        }
+
+        .divider-line {
+            width: 25px;
+            height: 3px;
+            background-color: var(--accent-red);
+            margin-bottom: 25px;
+        }
+
+        .txt-poem-context {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            color: #4a4036;
+            line-height: 2;
+            letter-spacing: 2px;
+            max-width: 500px;
+            opacity: 0.9;
+        }
+
+        .txt-poem-context p {
+            margin-bottom: 4px;
+        }
+
+        .action-area {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 2;
+        }
+
+        .scroll-down-btn {
+            font-family: var(--font-serif);
+            font-size: 0.85rem;
+            color: #554a3e;
+            text-decoration: none;
+            letter-spacing: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.3s;
+        }
+
+        .scroll-down-btn:hover {
+            color: var(--accent-red);
+        }
+
+        .scroll-down-btn::after {
+            content: '∨';
+            font-family: serif;
+            font-size: 0.75rem;
+            font-weight: bold;
+            animation: bounceArrow 1.6s infinite;
+        }
+
+        .pagination-hint {
+            font-family: "Georgia", serif;
+            font-size: 0.8rem;
+            color: #807366;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+        section:not(.hero-container) {
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 120px 10%;
+        }
+
+        .fluid-layout {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 70px;
+            perspective: 1000px;
+        }
+        .fluid-layout.reverse { flex-direction: row-reverse; }
+
+        /* 表格组件与文字卡片随滚动优雅模糊浮现 */
+        .chart-tilt-wrapper, .content-box {
+            opacity: 0;
+            transform: translateY(60px); 
+            filter: blur(10px);          
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1); 
+        }
+
+        .visible .chart-tilt-wrapper,
+        .visible .content-box {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+        
+        .visible .content-box {
+            transition-delay: 0.15s;
+        }
+
+        .chart-tilt-wrapper {
+            flex: 1.2;
+            transform-style: preserve-3d;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 420px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(140, 38, 26, 0.15);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-red);
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            overflow: hidden;
+            transition: transform 0.1s ease;
+        }
+        .chart-placeholder::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(140,38,26,0.03) 0%, transparent 70%);
+            transform: translateZ(20px);
+        }
+
+        .chart-hover-info {
+            position: absolute;
+            bottom: -50px;
+            background: var(--accent-red);
+            color: white;
+            padding: 10px 20px;
+            font-size: 13px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 20px rgba(140,38,26,0.2);
+        }
+        .chart-placeholder:hover .chart-hover-info { bottom: 30px; opacity: 1; }
+
+        .content-box {
+            flex: 0.8;
+        }
+        
+        .content-box h3 {
+            font-family: var(--font-serif);
+            font-size: 32px;
+            color: var(--accent-red);
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .content-box p {
+            font-family: var(--font-serif);
+            color: var(--text-muted);
+            line-height: 2;
+            font-size: 15px;
+            text-align: justify;
+        }
+
+        .img-placeholder {
+            margin-top: 30px;
+            width: 100%;
+            height: 140px;
+            background: rgba(255,255,255,0.5);
+            border: 1px dashed #e6e2d8;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            transition: all 0.4s;
+            cursor: pointer;
+        }
+
+        /* 大数字滚动区样式 */
+        .counter-section {
+            text-align: center;
+            background: radial-gradient(circle, rgba(140, 38, 26, 0.05) 0%, rgba(252,250,242,0) 70%);
+        }
+        .rolling-container { 
+            position: relative; 
+            display: inline-block; 
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1.2s ease;
+        }
+        .visible .rolling-container {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .rolling-number {
+            font-family: var(--font-serif);
+            font-size: 140px;
+            color: var(--accent-red);
+            font-weight: bold;
+            display: inline-block;
+            line-height: 1;
+        }
+        .counter-section .desc {
+            font-family: var(--font-serif);
+            font-size: 24px;
+            letter-spacing: 3px;
+            margin-top: 25px;
+            color: var(--text-main);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1s ease 0.5s;
+        }
+        .visible .desc { opacity: 1; transform: scale(1); }
+
+        /* 身份卡片选择区样式 */
+        .cards-title {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            margin-bottom: 60px;
+            letter-spacing: 4px;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease;
+        }
+        .visible .cards-title { opacity: 1; transform: translateY(0); }
+
+        .cards-container { 
+            display: flex; 
+            gap: 35px; 
+            width: 100%; 
+            max-width: 1050px; 
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1.2s ease 0.2s;
+        }
+        .visible .cards-container { opacity: 1; transform: translateY(0); }
+
+        .identity-card {
+            flex: 1;
+            height: 380px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid #e6e2d8;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 35px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            backdrop-filter: blur(5px);
+        }
+        .identity-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(140,38,26,0) 30%, rgba(140,38,26,0.9) 100%);
+            z-index: 1; opacity: 0; transition: opacity 0.5s;
+        }
+        .identity-card h4 { font-family: var(--font-serif); font-size: 24px; z-index: 2; transition: all 0.4s; font-weight: bold; }
+        .identity-card p { font-family: var(--font-serif); font-size: 14px; color: var(--text-muted); margin-top: 15px; z-index: 2; opacity: 0; transform: translateY(30px); transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); line-height: 1.7; }
+        .identity-card:hover { transform: translateY(-15px); box-shadow: 0 25px 50px rgba(140, 38, 26, 0.12); border-color: var(--accent-red); }
+        .identity-card:hover::before { opacity: 1; }
+        .identity-card:hover h4 { color: #fff; transform: translateY(-5px); }
+        .identity-card:hover p { color: #eae0df; opacity: 1; transform: translateY(0); }
+
+        .fade-in-section { position: relative; }
+
+        /* ==================== 动画关键帧 ==================== */
+        @keyframes fadeInCanvas {
+            from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes bounceArrow {
+            0%, 100% { transform: translateY(0); opacity: 0.6; }
+            50% { transform: translateY(5px); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-silhouette-container">
+        <svg class="bg-lines" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900">
+            <path d="M-100 700 C 200 500, 500 800, 800 450 C 1000 250, 1200 500, 1600 200" fill="none" stroke-width="1.5" stroke-dasharray="8 4"/>
+            <path d="M100 900 C 400 650, 700 500, 1100 650 C 1300 750, 1400 400, 1700 300" fill="none" stroke-width="1"/>
+        </svg>
+        
+        <img class="silhouette-img sil-rider" src="../Documents/未命名站点 2/骑手剪影.png" data-speed="-1.8" alt="平台骑手剪影">
+        <img class="silhouette-img sil-creator" src="../Documents/未命名站点 2/短剧演员.png" data-speed="1.2" alt="脑力创作者剪影">
+        <img class="silhouette-img sil-worker" src="../Documents/未命名站点 2/工人.png" data-speed="2.2" alt="传统劳工剪影">
+    </div>
+
+    <nav>
+        <div class="logo-area">
+            <span class="logo-title">中国数据新闻大赛</span>
+            <span class="logo-sub">零工人生</span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active">介绍</a>
+            <a href="#">传统零工</a>
+            <a href="#">平台零工</a>
+            <a href="#">脑力零工</a>
+            <a href="#">结语</a>
+        </div>
+    </nav>
+
+    <section class="hero-container">
+        <div class="typography-wrapper">
+            <div class="txt-top">生活在</div>
+            <div class="txt-middle">缝隙里的</div>
+            
+            <div class="txt-huge-digital">2.7亿</div>
+            
+            <div class="txt-bottom">人的零工人生</div>
+            <div class="divider-line"></div>
+            
+            <div class="txt-poem-context">
+                <p>他们没有固定工位，</p>
+                <p>却撑起城市运转的每一天。</p>
+                <p>他们在不确定中寻找确定，</p>
+                <p>在生活的缝隙里，</p>
+                <p>努力活出自己的答案。</p>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <a href="#data-anchor" class="scroll-down-btn">向下滚动</a>
+            <div class="pagination-hint">〈  01  /  04  〉</div>
+        </div>
+    </section>
+
+    <section class="fade-in-section" id="data-anchor">
+        <div class="fluid-layout">
+            <div class="chart-tilt-wrapper">
+                <div class="chart-placeholder">
+                    <div style="text-align: center; pointer-events: none;">
+                        <p style="font-size: 19px; font-weight: bold; margin-bottom: 12px; font-family: var(--font-serif);">📈 逐年增长趋势动态图表</p>
+                        <p style="font-size: 13px; opacity: 0.6;">[ 移入鼠标触发3D透视交互 ]</p>
+                    </div>
+                    <div class="chart-hover-info">✦ 实时探测：轻触挖掘核心扩张速率</div>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <h3>时代的无声巨变</h3>
+                <p>从2018年到2026年，自由就业、灵活就业的人数呈台阶式上升。数据背后不是冰冷的线条，而是数以亿计选择用双手构筑安全感的鲜活个体。</p>
+                <div class="img-placeholder">🖼️ [ 核心叙事影像插画预留 ]</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="counter-section fade-in-section" id="counterSection">
+        <div class="rolling-container">
+            <div class="rolling-number" id="targetNumber">0</div>
+            <span style="font-size: 60px; color: var(--accent-red); font-weight: bold; font-family: var(--font-serif);">亿</span>
+            <div class="desc">平均10个劳动人口中，就有 3 个在灵活就业</div>
+        </div>
+    </section>
+
+    <section class="fade-in-section">
+        <div class="fluid-layout reverse">
+            <div class="chart-tilt-wrapper">
+                <div class="chart-placeholder">
+                    <div style="text-align: center; pointer-events: none;">
+                        <p style="font-size: 19px; font-weight: bold; margin-bottom: 12px; font-family: var(--font-serif);">📊 零工群体画像结构模型</p>
+                        <p style="font-size: 13px; opacity: 0.6;">[ 移动鼠标感知多维空间 ]</p>
+                    </div>
+                    <div class="chart-hover-info">✦ 深度解构：解析传统/平台/脑力群体内部流动率</div>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <h3>生计、退路与新可能</h3>
+                <p>通过全方位、跨年度的群体调研发现，灵活就业的内部层级正在打破刻板分类。无论是用体力与系统博弈，还是在屏幕后交付智慧，缝隙之中都有蓬勃的自我重构。</p>
+                <div class="img-placeholder">
+                    <img src="生态写实图景.jpg" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .timeline-section {
+            background: linear-gradient(to bottom, transparent, rgba(140, 38, 26, 0.02));
+            padding: 100px 10% !important;
+            position: relative;
+        }
+        .timeline-title {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            margin-bottom: 80px;
+            letter-spacing: 4px;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease;
+        }
+        /* 当整屏可见时，标题首先浮现 */
+        .visible .timeline-title { opacity: 1; transform: translateY(0); }
+
+        /* 时间轴主干容器 */
+        .timeline-container {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            opacity: 1;
+        }
+
+        /* 💡 核心动效：中央主线初始垂直缩放为 0，滚动到这里时触发 2 秒的向下延伸生长动画 */
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            background-color: rgba(140, 38, 26, 0.25);
+            top: 0; bottom: 0; left: 50%;
+            margin-left: -1px;
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        /* 页面滚动到这里时，线条像植物生长一样向下飙出 */
+        .visible .timeline-container::after {
+            transform: scaleY(1);
+        }
+
+        /* 💡 核心动效：单个时间节点块初始隐藏、模糊并下沉 */
+        .timeline-block {
+            position: relative;
+            width: 50%;
+            padding: 20px 40px;
+            box-sizing: border-box;
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(40px);
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        /* 左右交错排版 */
+        .timeline-block.left { left: 0; text-align: right; }
+        .timeline-block.right { left: 50%; text-align: left; }
+
+        /* 💡 当页面滚动可见时，1.0、2.0、3.0 三个阶段顺着线条延伸的节奏，依次阶梯式缓缓展开 */
+        .visible .timeline-block {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+        }
+        /* 阶段一：等线条长出一点点再浮现（延迟 0.4 秒） */
+        .visible .timeline-block:nth-child(1) { transition-delay: 0.4s; }
+        /* 阶段二：线条继续往下延伸时浮现（延迟 0.9 秒） */
+        .visible .timeline-block:nth-child(2) { transition-delay: 0.9s; }
+        /* 阶段三：最后压轴浮现（延迟 1.4 秒） */
+        .visible .timeline-block:nth-child(3) { transition-delay: 1.4s; }
+
+        /* 时间轴轴心圆点（刻度） */
+        .timeline-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            right: -6px;
+            top: 28px;
+            background-color: var(--bg-color);
+            border: 2px solid var(--accent-red);
+            border-radius: 50%;
+            z-index: 5;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 0 0 rgba(140, 38, 26, 0.4);
+        }
+        .timeline-block.right .timeline-dot { left: -6px; right: auto; }
+
+        /* 时间轴文本框卡片 */
+        .timeline-content {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid #e6e2d8;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+        }
+        .timeline-content .year {
+            font-family: var(--font-serif);
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-red);
+            margin-bottom: 8px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .timeline-content h4 {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .timeline-content p {
+            font-family: var(--font-serif);
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        /* 💡 悬停鼠标时的微动交互 */
+        .timeline-block:hover .timeline-content {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: var(--accent-red);
+            box-shadow: 0 15px 35px rgba(140, 38, 26, 0.06);
+        }
+        /* 鼠标划过时，左侧块向左微移，右侧块向右微移，产生呼吸般的线条拉伸感 */
+        .timeline-block.left:hover .timeline-content { transform: translateX(-8px); }
+        .timeline-block.right:hover .timeline-content { transform: translateX(8px); }
+        
+        .timeline-block:hover .timeline-content .year { transform: scale(1.1); }
+        /* 点亮轴心刻度 */
+        .timeline-block:hover .timeline-dot {
+            background-color: var(--accent-red);
+            box-shadow: 0 0 0 6px rgba(140, 38, 26, 0.15);
+            transform: scale(1.2);
+        }
+
+        /* 窄屏幕自适应 */
+        @media screen and (max-width: 768px) {
+            .timeline-container::after { left: 31px; }
+            .timeline-block { width: 100%; padding-left: 70px; padding-right: 25px; }
+            .timeline-block.left { text-align: left; left: 0; }
+            .timeline-block.right { left: 0; }
+            .timeline-block.left .timeline-dot, .timeline-block.right .timeline-dot { left: 25px; right: auto; }
+            .timeline-block.left:hover .timeline-content, .timeline-block.right:hover .timeline-content { transform: translateX(5px); }
+        }
+    </style>
+
+    <section class="timeline-section fade-in-section">
+        <h3 class="timeline-title">零工经济演进的三大阶段</h3>
+        
+        <div class="timeline-container">
+            <div class="timeline-block left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <span class="year">1.0 时代</span>
+                    <h4>传统劳力与地缘市集</h4>
+                    <p>以地缘、熟人关系网络为纽带。表现为马路劳务市场蹲活、季节性农业短工以及最初步的家政钟点工。此时的生计完全依赖体力和物理空间的运气。</p>
+                </div>
+            </div>
+
+            <div class="timeline-block right">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <span class="year">2.0 时代</span>
+                    <h4>流量红利与平台算法</h4>
+                    <p>随着智能手机和移动支付普及，外卖骑手、网约车司机等“平台零工”爆发。劳动者被高度数字化的算法系统连接，用实时的标准劳力换取即时报酬。</p>
+                </div>
+            </div>
+
+            <div class="timeline-block left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <span class="year">3.0 时代</span>
+                    <h4>数字游民与智力重构</h4>
+                    <p>演进至当下，知识、创意与线上面板全面融合。独立开发者、短剧演员、远程自由撰稿人成为主力。打破空间限制，零工逐步向高频的“脑力交付”重构。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="fade-in-section">
+        <h3 class="cards-title">请选择你想了解的零工人生</h3>
+        <div class="cards-container">
+        <div class="identity-card" style="background-image: url; background-size: cover; background-position: center;">
+        <h4>传统零工</h4>
+        <p>马路蹲活的建筑工、家政保洁、季节性短工。他们用最朴素的体力，支撑着家庭的开销与城市的缝隙。</p>
+    </div>
+
+    <div class="identity-card" style="background-image: url('你的图片路径2.jpg'); background-size: cover; background-position: center;">
+        <h4>平台零工</h4>
+        <p>外卖骑手、网约车司机、同城配送员。被算法和系统连接，穿梭于现代都市的街头巷尾。</p>
+    </div>
+
+    <div class="identity-card" style="background-image: url('你的图片路径3.jpg'); background-size: cover; background-position: center;">
+        <h4>脑力零工</h4>
+        <p>独立开发者、短剧演员、自由撰稿人。借助线上面板与创意，在数字游民的浪潮中寻找个体价值。</p>
+    </div>
+</div>   
+    </section>
+
+    <script>
+        /* 1. 背景预留图片随页面滚动产生视差位移 */
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const images = document.querySelectorAll('.silhouette-img');
+            images.forEach(img => {
+                const speed = parseFloat(img.getAttribute('data-speed'));
+                const baseTransform = img.classList.contains('sil-rider') ? 'scaleX(-1)' : '';
+                img.style.transform = `translateY(${scrolled * speed * 0.05}px) ${baseTransform}`;
+            });
+        });
+
+        /* 2. 滚动到模块位置时触发内容浮现 */
+        const sections = document.querySelectorAll('.fade-in-section');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { 
+            threshold: 0.18 
+        });
+        sections.forEach(s => observer.observe(s));
+
+        /* 3. 数据图表卡片的3D透视微倾斜 */
+        const wrappers = document.querySelectorAll('.chart-tilt-wrapper');
+        wrappers.forEach(wrap => {
+            const card = wrap.querySelector('.chart-placeholder');
+            wrap.addEventListener('mousemove', (e) => {
+                const rect = wrap.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width/2;
+                const y = e.clientY - rect.top - rect.height/2;
+                const ax = -(y / rect.height) * 15; 
+                const ay = (x / rect.width) * 15;
+                card.style.transform = `rotateX(${ax}deg) rotateY(${ay}deg) scale(1.02)`;
+            });
+            wrap.addEventListener('mouseleave', () => {
+                card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+            });
+        });
+
+        /* 4. 数字平滑滚动逻辑 */
+        const counterSection = document.getElementById('counterSection');
+        const targetNumberEl = document.getElementById('targetNumber');
+        let hasAnimated = false;
+
+        const numObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting && !hasAnimated) {
+                    hasAnimated = true;
+                    let startTimestamp = null;
+                    const duration = 1800; 
+                    const step = (timestamp) => {
+                        if (!startTimestamp) startTimestamp = timestamp;
+                        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                        const easeProgress = 1 - Math.pow(1 - progress, 3);
+                        targetNumberEl.innerHTML = (easeProgress * 2.7).toFixed(1);
+                        if (progress < 1) {
+                            window.requestAnimationFrame(step);
+                        }
+                    };
+                    window.requestAnimationFrame(step);
+                }
+            });
+        }, { threshold: 0.4 });
+        numObserver.observe(counterSection);
+    </script>
+</body>
+</html>
